@@ -1,7 +1,8 @@
-FROM node:20-alpine3.21
+FROM node:20-bookworm-slim
 
-# Update OS packages to patched versions
-RUN apk update && apk upgrade --no-cache
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -10,9 +11,7 @@ RUN npm ci --only=production
 
 COPY . .
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-RUN chown -R appuser:appgroup /app
-
+RUN useradd -m appuser
 USER appuser
 
 ENV NODE_ENV=production
