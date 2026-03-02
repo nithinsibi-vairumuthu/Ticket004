@@ -43,11 +43,14 @@ pipeline {
             }
             steps {
                 sh """
-                helm upgrade --install app ./helm \
-                --namespace dev \
-                --create-namespace \
-                --set image.repository=${ECR_REPO} \
-                --set image.tag=${IMAGE_TAG}
+                kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
+
+                sed -i 's|IMAGE_PLACEHOLDER|${IMAGE}|g' k8s/deployment.yaml
+
+                kubectl apply -n dev -f k8s/deployment.yaml
+                kubectl apply -n dev -f k8s/service.yaml
+
+                kubectl rollout status deployment/eks-demo -n dev
                 """
             }
         }
@@ -67,11 +70,14 @@ pipeline {
             }
             steps {
                 sh """
-                helm upgrade --install app ./helm \
-                --namespace prod \
-                --create-namespace \
-                --set image.repository=${ECR_REPO} \
-                --set image.tag=${IMAGE_TAG}
+                kubectl create namespace prod --dry-run=client -o yaml | kubectl apply -f -
+
+                sed -i 's|IMAGE_PLACEHOLDER|${IMAGE}|g' k8s/deployment.yaml
+
+                kubectl apply -n prod -f k8s/deployment.yaml
+                kubectl apply -n prod -f k8s/service.yaml
+
+                kubectl rollout status deployment/eks-demo -n prod
                 """
             }
         }
@@ -82,10 +88,10 @@ pipeline {
             sh "docker image prune -f"
         }
         success {
-            echo "Pipeline executed successfully 🚀"
+            echo "CI/CD Completed Successfully 🚀"
         }
         failure {
-            echo "Pipeline failed ❌"
+            echo "Pipeline Failed ❌"
         }
     }
 }
