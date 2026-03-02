@@ -1,21 +1,25 @@
-FROM node:20-bookworm-slim
-
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    rm -rf /var/lib/apt/lists/*
+# -------- Stage 1: Build --------
+FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 COPY . .
 
-RUN useradd -m appuser
-USER appuser
+
+# -------- Stage 2: Distroless Runtime --------
+FROM gcr.io/distroless/nodejs20-debian12
+
+WORKDIR /app
+
+COPY --from=builder /app /app
 
 ENV NODE_ENV=production
 
+USER nonroot
+
 EXPOSE 3000
 
-CMD ["node", "app.js"]
+CMD ["app.js"]
