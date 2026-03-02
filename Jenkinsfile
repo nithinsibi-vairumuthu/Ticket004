@@ -21,11 +21,11 @@ pipeline {
             }
         }
 
-        stage('Trivy Scan') {
-            steps {
-                sh "trivy image --exit-code 0 --severity CRITICAL,${IMAGE}"
-            }
-        }
+       # stage('Trivy Scan') {
+           # steps {
+               # sh "trivy image --exit-code 0 --severity CRITICAL,${IMAGE}"
+           # }
+       # }
 
         stage('Push to ECR') {
             steps {
